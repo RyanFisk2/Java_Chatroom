@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * YOUR NAME HERE
+ * Ryan Fisk
  */
 public class ChatWindow extends JFrame {
 

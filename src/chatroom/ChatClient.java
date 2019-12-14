@@ -12,9 +12,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 /**
- * YOUR NAME HERE
+ * Ryan Fisk
  */
-public class ChatClient extends ChatWindow {
+public class ChatClient extends ChatWindow{
 
 	// Inner class used for networking
 	private Communicator comm;
@@ -26,7 +26,7 @@ public class ChatClient extends ChatWindow {
 	private JTextField messageTxt;
 	private JButton sendB;
 
-	public ChatClient(){
+	public ChatClient() {
 		super();
 		this.setTitle("Chat Client");
 		printMsg("Chat Client Started.");
@@ -61,24 +61,28 @@ public class ChatClient extends ChatWindow {
 		connectB.addActionListener(comm);
 		sendB.addActionListener(comm);
 
+
 	}
 
 	/** This inner class handles communication with the server. */
-	class Communicator implements ActionListener{
+	class Communicator implements ActionListener, Runnable{
 		private Socket socket;
 		private PrintWriter writer;
 		private BufferedReader reader;
 		private int port = 2113;
+		Thread t = new Thread(this);
 
 		@Override
 		public void actionPerformed(ActionEvent actionEvent) {
 			if(actionEvent.getActionCommand().compareTo("Connect") == 0) {
 				connect();
+				t.start();
 			}
 			else if(actionEvent.getActionCommand().compareTo("Send") == 0) {
 				sendMsg(messageTxt.getText());
 			}
 		}
+
 
 		/** Connect to the remote server and setup input/output streams. */
 		public void connect(){
@@ -90,6 +94,7 @@ public class ChatClient extends ChatWindow {
 				reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				sendMsg("Hello server");
+				//readMsg();
 
 			}
 			catch(IOException e) {
@@ -97,19 +102,52 @@ public class ChatClient extends ChatWindow {
 			}
 		}
 		/** Receive and display a message */
-		public void readMsg() throws IOException {
-			String s = reader.readLine();
+		public String readMsg() throws IOException {
+			String s = "";
+			try{
+				s = reader.readLine();
+			} catch (IOException e){
+				System.out.println(e);
+			}
+
 			printMsg(s);
+			return s;
 		}
 		/** Send a string */
 		public void sendMsg(String s){
-			writer.println(s);
+
+			if(s.substring(0, 5).equals("/name")) //client wants to change name
+			{
+				nameTxt.setText(s.substring(5, s.length())); //set name to everything after \name
+				return;
+			}
+
+			writer.println("[" + nameTxt.getText() + "]: " + s);
+			/*try{
+				readMsg();
+			} catch (IOException e){
+				System.out.println(e);
+			}*/
+			
+		}
+
+		public void run()
+		{
+			while(true)
+			{
+				try{
+					String s = readMsg();
+				} catch (IOException e){
+					System.out.println(e);
+				}
+			}
+			
 		}
 	}
 
-
-	public static void main(String args[]){
-		new ChatClient();
+	public static void main(String[] argv)
+	{
+			new ChatClient();
 	}
-
 }
+
